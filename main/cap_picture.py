@@ -3,7 +3,7 @@ import os
 
 # ชื่อไฟล์วีดีโอและโฟลเดอร์ที่ต้องการบันทึกรูป
 video_name = input('File VDO name: ')
-video_file = f'vdo/{video_name}.mp4'
+video_file = f'vdo_pose/{video_name}.mp4'
 output_folder = 'picture'
 
 # สร้างโฟลเดอร์ picture ถ้ายังไม่มี
