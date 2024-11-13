@@ -47,16 +47,30 @@ def calculate_rates(file_path, frame_rate_threshold, use_frame_rate, use_machine
             continue  
 
         frame_rates.append(frame_rate)
+
+        frame_no = n + 1 # เฟรมปัจจุบัน
+
+        frame_data_left_x = data['x23'][frame_no]
+        frame_data_left_y = data['y23'][frame_no]
+
+        frame_data_right_x = data['x24'][frame_no]
+        frame_data_right_y = data['y24'][frame_no]
+
+        frame_data_nose_x = data['x0'][frame_no]
+        frame_data_nose_y = data['y0'][frame_no]
         
         # คำนวณ Center of Gravity Angle
-        cog_x_n1 = (data.iloc[n + 1, 24] + data.iloc[n + 1, 23]) / 2
-        cog_y_n1 = (data.iloc[n + 1, 24 + 1] + data.iloc[n + 1, 23 + 1]) / 2
+        cog_x_n1 = (frame_data_right_x + frame_data_left_x) / 2
+        cog_y_n1 = (frame_data_right_y + frame_data_left_y) / 2
         
-        dx_n1 = cog_x_n1 - data.iloc[n + 1, 0]  # x ของตำแหน่งอ้างอิงที่เฟรม ปัจจุบัน
-        dy_n1 = cog_y_n1 - data.iloc[n + 1, 0]  # y ของตำแหน่งอ้างอิงที่เฟรม ปัจจุบัน
-        
+        # Slope 
+        dx_n1 = cog_x_n1 - frame_data_nose_x  # x ของตำแหน่งอ้างอิงที่เฟรม ปัจจุบัน
+        dy_n1 = cog_y_n1 - frame_data_nose_y  # y ของตำแหน่งอ้างอิงที่เฟรม ปัจจุบัน
+
         # คำนวณมุม COG ในเฟรม ปัจจุบัน
-        angle_n1 = np.arctan2(dy_n1, dx_n1) * 180 / np.pi
+        angle_n1 = np.arctan2(abs(dy_n1), abs(dx_n1)) * (180 / np.pi)
+        # angle_n1 = np.arctan2(dy_n1, dx_n1) * ( 180 / np.pi )
+
 
         cog_angles.append(angle_n1)
         
@@ -65,16 +79,20 @@ def calculate_rates(file_path, frame_rate_threshold, use_frame_rate, use_machine
         total_length_n1 = 0
         
         for connection in connections:
-            point_a_n = data.iloc[n, connection[0]]
-            point_b_n = data.iloc[n, connection[1]]
-            total_length_n += np.sqrt(((point_a_n - point_b_n) ** 2) + ((data.iloc[n, connection[0] + 1] - data.iloc[n, connection[1] + 1]) ** 2))
+            point_a_n = data[f'x{connection[0]}'][n]
+            point_b_n = data[f'x{connection[1]}'][n]
+            # point_a_n = data.iloc[n, connection[0]]
+            # point_b_n = data.iloc[n, connection[1]]
+            total_length_n += np.sqrt(((point_a_n - point_b_n) ** 2) + ((data[f'y{connection[0]}'][n] - (data[f'y{connection[1]}'][n])) ** 2))
             
-            if n + 1 < len(data):
-                point_a_n1 = data.iloc[n + 1, connection[0]]
-                point_b_n1 = data.iloc[n + 1, connection[1]]
-                total_length_n1 += np.sqrt((point_a_n1 - point_b_n1) ** 2 + (data.iloc[n + 1, connection[0] + 1] - data.iloc[n + 1, connection[1] + 1]) ** 2)
-            else:
-                total_length_n1 += 0  # กำหนดเป็น 0 ถ้าไม่มีเฟรมถัดไป
+            # if n + 1 < len(data):
+                # point_a_n1 = 
+                # point_b_n1 = data[f'y{connection[0]}'][n + 1]
+                # point_a_n1 = data.iloc[n + 1, connection[0]]
+                # point_b_n1 = data.iloc[n + 1, connection[1]]
+                # total_length_n1 += np.sqrt((point_a_n1 - point_b_n1) ** 2 + (data.iloc[n + 1, connection[0] + 1] - data.iloc[n + 1, connection[1] + 1]) ** 2)
+            # else:
+            #     total_length_n1 += 0  # กำหนดเป็น 0 ถ้าไม่มีเฟรมถัดไป
 
         movement_rate_n = np.sqrt((((total_length_n - total_length_n1) ** 2) / 1920) + (((total_length_n - total_length_n1) ** 2) / 1080)) / frame_rate
 
